@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeckCorp — Authority Does Not Require Permission</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void:   #040406;
+  --deep:   #07080b;
+  --panel:  #111116;
+  --border: #1c1c24;
+  --muted:  #2e2e3c;
+  --dim:    #484858;
+  --sub:    #626272;
+  --text:   #9898a8;
+  --bright: #c4c4d0;
+  --white:  #e8e8f0;
+  --accent: #00e5a0;
+  --warn:   #ff3b5c;
+  --cp: 'Chakra Petch', monospace;
+}
+
+html {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--cp);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  max-width: 1140px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── CURSOR GLOW ──────────────────────────────────── */
+#glow {
+  position: fixed;
+  top: 0; left: 0;
+  width: 520px; height: 520px;
+  margin: -260px 0 0 -260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,160,.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity .4s;
+  will-change: transform;
+}
+
+/* ── CRT / SCANLINE OVERLAY ───────────────────────── */
+#crt {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.16) 3px,
+      rgba(0,0,0,0) 4px
+    );
+  mix-blend-mode: multiply;
+}
+#crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.55) 100%);
+}
+#flicker {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8999;
+  background: rgba(0,229,160,.015);
+  animation: flick 7s infinite steps(1);
+}
+@keyframes flick {
+  0%,96%,100% { opacity: 0; }
+  97% { opacity: 1; }
+  98% { opacity: 0; }
+  99% { opacity: .6; }
+}
+
+/* ── BOOT SEQUENCE ────────────────────────────────── */
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--void);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 48px;
+  font-size: 13px;
+  letter-spacing: .04em;
+  color: var(--accent);
+  overflow: hidden;
+}
+#boot.done { animation: bootout .6s ease forwards; }
+@keyframes bootout { to { opacity: 0; visibility: hidden; } }
+#boot-log { white-space: pre-wrap; max-width: 760px; line-height: 1.9; }
+#boot-log .ok   { color: var(--accent); }
+#boot-log .dim  { color: var(--dim); }
+#boot-log .warn { color: var(--warn); }
+#boot-log .wht  { color: var(--white); }
+.cur { display: inline-block; width: 9px; height: 15px; background: var(--accent); margin-left: 2px; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── CLASSIFICATION BANNER ────────────────────────── */
+#classbar {
+  position: fixed;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 1140px;
+  z-index: 101;
+  height: 22px;
+  background: var(--warn);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  overflow: hidden;
+}
+#classbar .scroll { white-space: nowrap; animation: bannerscroll 28s linear infinite; }
+
+@keyframes bannerscroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ── NAV ──────────────────────────────────────────── */
+nav {
+  position: fixed;
+  top: 22px; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 1140px;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 64px;
+  height: 64px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(4,4,6,.96);
+  backdrop-filter: blur(14px);
+}
+.nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+.nav-logo { width: 20px; height: 20px; filter: drop-shadow(0 0 7px rgba(0,229,160,.5)); }
+.nav-name { font-size: 14px; font-weight: 700; letter-spacing: .1em; color: var(--white); }
+.nav-name .corp { color: var(--accent); }
+.nav-links { display: flex; gap: 40px; align-items: center; }
+.nav-link {
+  font-size: 9px; letter-spacing: .22em; color: var(--sub);
+  text-transform: uppercase; text-decoration: none; transition: color .15s;
+}
+.nav-link:hover { color: var(--bright); }
+.nav-clock { font-size: 9px; letter-spacing: .12em; color: var(--accent); opacity: .7; }
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  padding: 64px;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  z-index: 2;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 44%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px; height: 700px;
+  background: radial-gradient(ellipse, rgba(0,229,160,.055) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  position: absolute; top: 96px; left: 64px; right: 64px;
+  display: flex; justify-content: space-between;
+  font-size: 9px; letter-spacing: .2em; color: var(--dim);
+  text-transform: uppercase;
+}
+.hero-logo {
+  width: 100px; height: 100px; margin-bottom: 52px;
+  filter: drop-shadow(0 0 28px rgba(0,229,160,.3)) drop-shadow(0 0 8px rgba(0,229,160,.5));
+  animation: rise .9s ease both;
+}
+.hero-logo rect { transform-box: fill-box; transform-origin: center; }
+.hero-wordmark {
+  font-size: 88px; font-weight: 700; letter-spacing: .12em;
+  color: var(--white); line-height: 1; margin-bottom: 18px;
+  animation: rise .9s .12s ease both;
+}
+.hero-wordmark .corp { color: var(--accent); }
+.hero-sub {
+  font-size: 10px; letter-spacing: .42em; color: var(--dim);
+  text-transform: uppercase; margin-bottom: 40px;
+  animation: rise .9s .22s ease both;
+}
+.hero-rule { width: 280px; height: 1px; background: var(--border); margin-bottom: 32px; }
+.hero-line {
+  font-size: 13px; letter-spacing: .18em; color: var(--bright);
+  text-transform: uppercase; text-align: center; line-height: 2.2; font-weight: 500;
+  animation: rise .9s .35s ease both;
+}
+.hero-line .accent { color: var(--accent); }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.hero-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 18px 64px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between;
+  font-size: 8px; letter-spacing: .18em; color: var(--muted);
+  text-transform: uppercase;
+}
+.hero-footer .r { color: var(--accent); opacity: .5; }
+
+/* ── TELEMETRY TICKER ─────────────────────────────── */
+.telemetry {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--border); position: relative; z-index: 2;
+}
+.tcell {
+  padding: 28px 24px; border-right: 1px solid var(--border);
+  text-align: center; background: var(--deep);
+}
+.tcell:last-child { border-right: none; }
+.tnum { font-size: 30px; font-weight: 700; color: var(--accent); letter-spacing: .02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.tlabel { font-size: 8px; letter-spacing: .24em; color: var(--dim); text-transform: uppercase; margin-top: 12px; }
+
+/* ── SECTIONS ─────────────────────────────────────── */
+.section { padding: 88px 64px; border-bottom: 1px solid var(--border); position: relative; z-index: 2; }
+.sh { display: flex; align-items: baseline; gap: 18px; margin-bottom: 56px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.sh-num { font-size: 9px; letter-spacing: .25em; color: var(--accent); opacity: .6; }
+.sh-title { font-size: 11px; font-weight: 700; letter-spacing: .4em; color: var(--bright); text-transform: uppercase; }
+
+/* ── ABOUT ────────────────────────────────────────── */
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+.about-lead { font-size: 22px; font-weight: 700; color: var(--bright); line-height: 1.45; letter-spacing: .03em; margin-bottom: 28px; }
+.about-body { font-size: 13px; color: var(--sub); line-height: 2.1; letter-spacing: .03em; }
+.about-meta { display: flex; flex-direction: column; gap: 2px; }
+.meta-row { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 24px; background: var(--panel); border: 1px solid var(--border); }
+.meta-label { font-size: 9px; letter-spacing: .25em; color: var(--dim); text-transform: uppercase; }
+.meta-value { font-size: 11px; letter-spacing: .08em; color: var(--bright); text-align: right; }
+.meta-value .live { color: var(--accent); }
+
+/* ── SERVICES ─────────────────────────────────────── */
+.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.service { background: var(--panel); border: 1px solid var(--border); padding: 44px; position: relative; overflow: hidden; transition: border-color .2s; }
+.service::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--accent); opacity: 0; transition: opacity .25s; }
+.service:hover { border-color: rgba(0,229,160,.22); }
+.service:hover::before { opacity: 1; }
+.service-id { font-size: 8px; letter-spacing: .28em; color: var(--dim); margin-bottom: 16px; display: block; }
+.service-name { font-size: 13px; font-weight: 700; color: var(--bright); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+.service-desc { font-size: 12px; color: var(--sub); line-height: 2; letter-spacing: .03em; }
+
+/* ── PROCESS ──────────────────────────────────────── */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.step { background: var(--deep); border: 1px solid var(--border); padding: 44px 40px; }
+.step-n { font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 20px; opacity: .45; letter-spacing: .02em; }
+.step-title { font-size: 11px; font-weight: 700; color: var(--bright); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
+.step-body { font-size: 12px; color: var(--sub); line-height: 2; letter-spacing: .03em; }
+
+/* ── REQUEST AUDIENCE ─────────────────────────────── */
+.audience { background: var(--deep); border: 1px solid var(--border); padding: 0; overflow: hidden; }
+.aud-head { padding: 18px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--panel); }
+.aud-head .lbl { font-size: 8px; letter-spacing: .3em; color: var(--accent); text-transform: uppercase; }
+.aud-head .dot { font-size: 8px; letter-spacing: .2em; color: var(--dim); text-transform: uppercase; }
+.aud-body { padding: 28px; }
+.aud-prompt { font-size: 12px; color: var(--sub); line-height: 1.9; margin-bottom: 22px; letter-spacing: .03em; }
+.aud-form { display: flex; gap: 2px; }
+.aud-form input {
+  flex: 1; background: var(--void); border: 1px solid var(--border); color: var(--white);
+  font-family: var(--cp); font-size: 13px; letter-spacing: .04em; padding: 16px 20px; outline: none;
+}
+.aud-form input:focus { border-color: rgba(0,229,160,.4); }
+.aud-form button {
+  background: var(--accent); color: var(--void); border: none; font-family: var(--cp);
+  font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+  padding: 0 32px; cursor: pointer; transition: background .15s;
+}
+.aud-form button:hover { background: #00ffb4; }
+.aud-out { margin-top: 22px; font-size: 12px; line-height: 1.9; letter-spacing: .03em; min-height: 20px; }
+.aud-out .stamp { color: var(--warn); font-weight: 700; letter-spacing: .12em; }
+.aud-out .ref { color: var(--dim); }
+.aud-out .body { color: var(--bright); }
+
+/* ── CONTACT ──────────────────────────────────────── */
+.contact-block { background: var(--deep); border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
+.contact-left { padding: 56px 60px; border-right: 1px solid var(--border); }
+.contact-right { padding: 56px 60px; }
+.contact-label { font-size: 8px; letter-spacing: .3em; color: var(--accent); margin-bottom: 20px; display: block; }
+.contact-title { font-size: 26px; font-weight: 700; color: var(--white); letter-spacing: .04em; text-transform: uppercase; line-height: 1.2; margin-bottom: 20px; }
+.contact-body { font-size: 12px; color: var(--sub); line-height: 2.1; letter-spacing: .03em; }
+.contact-item { display: flex; flex-direction: column; gap: 5px; margin-bottom: 32px; }
+.contact-item:last-child { margin-bottom: 0; }
+.ci-label { font-size: 8px; letter-spacing: .28em; color: var(--dim); text-transform: uppercase; }
+.ci-value { font-size: 13px; color: var(--bright); letter-spacing: .06em; }
+.ci-value a { color: var(--accent); text-decoration: none; }
+.ci-value a:hover { text-decoration: underline; }
+
+/* ── FOOTER ───────────────────────────────────────── */
+footer { padding: 22px 64px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; letter-spacing: .18em; color: var(--dim); text-transform: uppercase; position: relative; z-index: 2; }
+footer .r { color: var(--accent); opacity: .5; }
+footer .hint { color: var(--muted); }
+footer .hint b { color: var(--sub); }
+
+/* ── TERMINAL ─────────────────────────────────────── */
+#term {
+  position: fixed; inset: 0; z-index: 9500;
+  background: rgba(4,4,6,.97); backdrop-filter: blur(4px);
+  display: none; flex-direction: column; padding: 48px;
+  font-size: 13px; letter-spacing: .03em; line-height: 1.85;
+}
+#term.open { display: flex; }
+#term-head { color: var(--dim); font-size: 9px; letter-spacing: .3em; text-transform: uppercase; margin-bottom: 18px; display: flex; justify-content: space-between; }
+#term-out { flex: 1; overflow-y: auto; white-space: pre-wrap; color: var(--text); }
+#term-out .ok { color: var(--accent); }
+#term-out .warn { color: var(--warn); }
+#term-out .wht { color: var(--white); }
+#term-out .dim { color: var(--dim); }
+#term-out .you { color: var(--bright); }
+#term-line { display: flex; align-items: center; gap: 10px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 14px; }
+#term-line .ps { color: var(--accent); font-weight: 700; }
+#term-in { flex: 1; background: none; border: none; outline: none; color: var(--white); font-family: var(--cp); font-size: 13px; letter-spacing: .03em; }
+
+/* ── RESPONSIVE ───────────────────────────────────── */
+@media (max-width: 860px) {
+  nav { padding: 0 32px; height: 56px; }
+  .nav-links { gap: 22px; }
+  .hero { padding: 56px 32px; }
+  .hero-eyebrow { left: 32px; right: 32px; top: 80px; font-size: 8px; }
+  .hero-eyebrow span:last-child { display: none; }
+  .hero-logo { width: 80px; height: 80px; margin-bottom: 40px; }
+  .hero-wordmark { font-size: 64px; }
+  .hero-sub { font-size: 9px; letter-spacing: .32em; }
+  .hero-footer { padding: 16px 32px; }
+  .hero-footer span:first-child { display: none; }
+  .section { padding: 64px 32px; }
+  .sh { margin-bottom: 40px; }
+  .telemetry { grid-template-columns: 1fr 1fr; }
+  .tcell:nth-child(2) { border-right: none; }
+  .tcell:nth-child(1), .tcell:nth-child(2) { border-bottom: 1px solid var(--border); }
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .about-lead { font-size: 20px; }
+  .services-grid { grid-template-columns: 1fr; }
+  .service { padding: 36px 32px; }
+  .steps { grid-template-columns: 1fr; }
+  .contact-block { grid-template-columns: 1fr; }
+  .contact-left { border-right: none; border-bottom: 1px solid var(--border); padding: 44px; }
+  .contact-right { padding: 44px; }
+  .contact-title { font-size: 22px; }
+  footer { padding: 20px 32px; }
+  #boot { padding: 32px; font-size: 12px; }
+  #term { padding: 32px; }
+}
+@media (max-width: 560px) {
+  nav { padding: 0 20px; height: 52px; }
+  .nav-links .nav-link { display: none; }
+  .hero { padding: 52px 20px; min-height: 100svh; }
+  .hero-eyebrow { left: 20px; right: 20px; top: 72px; }
+  .hero::before { width: 360px; height: 360px; }
+  .hero-logo { width: 64px; height: 64px; margin-bottom: 32px; }
+  .hero-wordmark { font-size: 44px; letter-spacing: .1em; }
+  .hero-sub { font-size: 8px; letter-spacing: .26em; }
+  .hero-rule { width: 180px; margin-bottom: 24px; }
+  .hero-line { font-size: 11px; letter-spacing: .12em; }
+  .hero-footer { padding: 14px 20px; display: none; }
+  .section { padding: 52px 20px; }
+  .sh { margin-bottom: 32px; padding-bottom: 14px; gap: 12px; }
+  .sh-title { font-size: 10px; letter-spacing: .3em; }
+  .about-lead { font-size: 18px; margin-bottom: 20px; }
+  .meta-row { padding: 14px 16px; }
+  .service { padding: 28px 24px; }
+  .step { padding: 32px 28px; }
+  .contact-left, .contact-right { padding: 36px 28px; }
+  .contact-title { font-size: 20px; }
+  .tnum { font-size: 24px; }
+  .aud-form { flex-direction: column; }
+  .aud-form button { padding: 16px; }
+  footer { padding: 18px 20px; flex-direction: column; gap: 6px; align-items: flex-start; }
+  #glow { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- BOOT SEQUENCE -->
+<div id="boot"><div id="boot-log"></div></div>
+
+<!-- OVERLAYS -->
+<div id="glow"></div>
+<div id="crt"></div>
+<div id="flicker"></div>
+
+<!-- TERMINAL -->
+<div id="term">
+  <div id="term-head">
+    <span>GECKCORP SECURE SHELL · GC-TTY-001 · CLASSIFICATION RESTRICTED</span>
+    <span>[ ESC ] TO DISCONNECT</span>
+  </div>
+  <div id="term-out"></div>
+  <div id="term-line">
+    <span class="ps">guest@geckcorp:~$</span>
+    <input id="term-in" autocomplete="off" autocapitalize="off" spellcheck="false">
+  </div>
+</div>
+
+<!-- CLASSIFICATION BANNER -->
+<div id="classbar">
+  <div class="scroll">CLASSIFICATION: RESTRICTED&nbsp;&nbsp;·&nbsp;&nbsp;CONTROLLED DISTRIBUTION&nbsp;&nbsp;·&nbsp;&nbsp;NON-COMPLIANCE ACTIONED WITHOUT NOTICE&nbsp;&nbsp;·&nbsp;&nbsp;AUTHORITY DOES NOT REQUIRE PERMISSION&nbsp;&nbsp;·&nbsp;&nbsp;CLASSIFICATION: RESTRICTED&nbsp;&nbsp;·&nbsp;&nbsp;CONTROLLED DISTRIBUTION&nbsp;&nbsp;·&nbsp;&nbsp;NON-COMPLIANCE ACTIONED WITHOUT NOTICE&nbsp;&nbsp;·&nbsp;&nbsp;AUTHORITY DOES NOT REQUIRE PERMISSION&nbsp;&nbsp;·&nbsp;&nbsp;</div>
+</div>
+
+<nav>
+  <a class="nav-brand" href="#">
+    <svg class="nav-logo" id="navLogo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"></svg>
+    <span class="nav-name">GECK<span class="corp">CORP</span></span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#services">Services</a>
+    <a class="nav-link" href="#process">Process</a>
+    <a class="nav-link" href="#audience">Request</a>
+    <a class="nav-link" href="#contact">Contact</a>
+    <span class="nav-clock" id="clock">--:--:-- UTC</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">
+    <span>Independent Consultancy &nbsp;·&nbsp; Est. MMXXVI</span>
+    <span>Brussels, Belgium</span>
+  </div>
+
+  <svg class="hero-logo" id="heroLogo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <h1 class="hero-wordmark">GECK<span class="corp">CORP</span></h1>
+  <p class="hero-sub">Strategy &nbsp;·&nbsp; Digital &nbsp;·&nbsp; Operations</p>
+  <div class="hero-rule"></div>
+  <p class="hero-line">Authority does not require permission.<br><span class="accent">GeckCorp has already decided.</span></p>
+
+  <div class="hero-footer">
+    <span>GeckCorp &nbsp;·&nbsp; Registered in Belgium &nbsp;·&nbsp; GC-ENTITY-001</span>
+    <span class="r">GECKCORP.IO</span>
+  </div>
+</div>
+
+<!-- TELEMETRY -->
+<div class="telemetry">
+  <div class="tcell"><div class="tnum" data-target="14820" data-suffix="">0</div><div class="tlabel">Decisions Made</div></div>
+  <div class="tcell"><div class="tnum" data-target="392" data-suffix="">0</div><div class="tlabel">Engagements Terminated</div></div>
+  <div class="tcell"><div class="tnum" data-target="100" data-suffix="%">0</div><div class="tlabel">Permissions Not Requested</div></div>
+  <div class="tcell"><div class="tnum" data-target="0" data-suffix="">0</div><div class="tlabel">Committees Convened</div></div>
+</div>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="sh"><span class="sh-num">01</span><span class="sh-title">About</span></div>
+  <div class="about-grid">
+    <div>
+      <div class="about-lead">Independent consultancy.<br>No overhead. No committees.</div>
+      <div class="about-body">GeckCorp works directly with founders and decision-makers on strategy, digital infrastructure, and growth operations. Engagements are focused, documented, and time-bound. Work starts when the scope is agreed. It ends when the work is done. There is no third option.</div>
+    </div>
+    <div class="about-meta">
+      <div class="meta-row"><span class="meta-label">Entity</span><span class="meta-value">GeckCorp SRL</span></div>
+      <div class="meta-row"><span class="meta-label">Structure</span><span class="meta-value">Independent · Unipersonal</span></div>
+      <div class="meta-row"><span class="meta-label">Location</span><span class="meta-value">Belgium · EU</span></div>
+      <div class="meta-row"><span class="meta-label">Operational Status</span><span class="meta-value"><span class="live">● ACTIVE</span></span></div>
+      <div class="meta-row"><span class="meta-label">Availability</span><span class="meta-value">Q3 2026 · Limited</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="section" id="services">
+  <div class="sh"><span class="sh-num">02</span><span class="sh-title">Services</span></div>
+  <div class="services-grid">
+    <div class="service"><span class="service-id">GC-SVC-001</span><div class="service-name">Strategy &amp; Direction</div><div class="service-desc">Commercial positioning, go-to-market planning, and decision support for founders and leadership teams. Structured, written, and actionable from day one.</div></div>
+    <div class="service"><span class="service-id">GC-SVC-002</span><div class="service-name">Digital Infrastructure</div><div class="service-desc">Web architecture, marketing technology, and platform implementation. Specification agreed upfront. Delivery against that specification. No scope creep by design.</div></div>
+    <div class="service"><span class="service-id">GC-SVC-003</span><div class="service-name">Growth Operations</div><div class="service-desc">Performance marketing, content strategy, and channel management. Focused on measurable outcomes. Reporting is regular, clear, and without jargon.</div></div>
+    <div class="service"><span class="service-id">GC-SVC-004</span><div class="service-name">Organisational Design</div><div class="service-desc">Process documentation, team structure, and operational cadence for scaling teams. Practical systems built to be used by the people who inherit them.</div></div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="section" id="process">
+  <div class="sh"><span class="sh-num">03</span><span class="sh-title">How It Works</span></div>
+  <div class="steps">
+    <div class="step"><div class="step-n">01</div><div class="step-title">Brief</div><div class="step-body">You describe the problem or the outcome you need. If there's a fit, a Scope of Work is drafted within five working days. No discovery fees.</div></div>
+    <div class="step"><div class="step-n">02</div><div class="step-title">Agree</div><div class="step-body">Scope, timeline, and fee are confirmed in writing before any work begins. Changes after sign-off are scoped and priced separately. No surprises.</div></div>
+    <div class="step"><div class="step-n">03</div><div class="step-title">Deliver</div><div class="step-body">Work is delivered against the agreed scope. Progress is communicated at defined intervals. Invoices are issued NET-14 from delivery.</div></div>
+  </div>
+</section>
+
+<!-- REQUEST AUDIENCE -->
+<section class="section" id="audience">
+  <div class="sh"><span class="sh-num">04</span><span class="sh-title">Request Audience</span></div>
+  <div class="audience">
+    <div class="aud-head">
+      <span class="lbl">GC-INTAKE-TERMINAL</span>
+      <span class="dot" id="audStatus">● CHANNEL OPEN</span>
+    </div>
+    <div class="aud-body">
+      <div class="aud-prompt">State your request. GeckCorp reviews all submissions against current operational priorities. A determination will be rendered immediately. The determination is final.</div>
+      <form class="aud-form" id="audForm">
+        <input id="audInput" placeholder="e.g. I would like to schedule a call…" autocomplete="off" spellcheck="false">
+        <button type="submit">Submit</button>
+      </form>
+      <div class="aud-out" id="audOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contact" style="border-bottom: none;">
+  <div class="sh"><span class="sh-num">05</span><span class="sh-title">Contact</span></div>
+  <div class="contact-block">
+    <div class="contact-left">
+      <span class="contact-label">GET IN TOUCH</span>
+      <div class="contact-title">Let's talk<br>about your project.</div>
+      <div class="contact-body">Send a brief description of your challenge, your timeline, and the type of support you're looking for. Responses within 48 hours on working days. Or whenever GeckCorp deems appropriate.</div>
+    </div>
+    <div class="contact-right">
+      <div class="contact-item"><span class="ci-label">Email</span><span class="ci-value"><a href="mailto:contact@geckcorp.io">contact@geckcorp.io</a></span></div>
+      <div class="contact-item"><span class="ci-label">Entity</span><span class="ci-value">GeckCorp SRL &nbsp;·&nbsp; Belgium</span></div>
+      <div class="contact-item"><span class="ci-label">VAT</span><span class="ci-value">GC·MMXXVI·001</span></div>
+      <div class="contact-item"><span class="ci-label">Availability</span><span class="ci-value">Limited &nbsp;·&nbsp; Q3 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>© MMXXVI GeckCorp SRL &nbsp;·&nbsp; All rights reserved</span>
+  <span class="hint">PRESS <b>~</b> FOR SECURE SHELL</span>
+  <span class="r">GECKCORP.IO</span>
+</footer>
+
+<script>
+/* ── LOGO (shared rects) ──────────────────────────── */
+const LOGO_RECTS = [
+  [502.2,82.9,64.7,24.3],[471,126.2,127.5,28.2],[470,172.8,127.8,27.9],[486.6,219.3,94.7,27.9],
+  [642.7,224.8,64,22.3],[362.1,225,64,22.3],[316.9,265.5,434.6,29],[471.4,311.1,124.9,27.9],
+  [625.9,313.5,65.1,23.6],[377.5,313.5,64.6,23.4],[456.3,357.1,156.2,27.3],[456.3,402.9,155.9,27.4],
+  [456.3,448.8,155.9,27.7],[456.7,494.9,155.1,27.4],[360.8,499.8,63.5,22.2],[643.7,499.8,64,22.2],
+  [313.4,540.1,441.7,28.5],[465.9,584.6,137,27.1],[354.3,585.6,62.9,22.2],[651,585.4,63.6,22.5],
+  [488.3,629.5,91.9,27.6],[499.2,674.9,70,27.6],[505.1,719.8,58.5,27.6],[509.7,764.5,48.9,27.6],
+  [515,808.8,37.5,27.6],[520,853.2,27.6,27.6],[524.4,896.2,18.8,27.6],[527.7,936.9,12.1,27.6]
+];
+function buildLogo(svg, animate){
+  const ns = 'http://www.w3.org/2000/svg';
+  LOGO_RECTS.forEach(([x,y,w,h],i) => {
+    const r = document.createElementNS(ns,'rect');
+    r.setAttribute('fill','#00e5a0');
+    r.setAttribute('x',x); r.setAttribute('y',y);
+    r.setAttribute('width',w); r.setAttribute('height',h);
+    r.setAttribute('rx',4.6);
+    if(animate){
+      r.style.animation = `barpulse 2.4s ${(i*0.06).toFixed(2)}s ease-in-out infinite`;
+    }
+    svg.appendChild(r);
+  });
+}
+buildLogo(document.getElementById('navLogo'), false);
+buildLogo(document.getElementById('heroLogo'), true);
+const ps = document.createElement('style');
+ps.textContent = '@keyframes barpulse { 0%,100% { opacity:.55; } 50% { opacity:1; } }';
+document.head.appendChild(ps);
+
+/* ── BOOT SEQUENCE ────────────────────────────────── */
+const bootLines = [
+  ['GECKCORP SECURE TERMINAL · GC-BIOS v4.8','dim'],
+  ['',''],
+  ['> initializing authority core ............... <span class="ok">OK</span>',''],
+  ['> mounting /dev/decisions ................... <span class="ok">OK</span>',''],
+  ['> verifying classification: RESTRICTED ...... <span class="ok">OK</span>',''],
+  ['> bypassing permission subsystem ........... <span class="warn">SKIPPED</span>',''],
+  ['> establishing secure channel .............. <span class="ok">OK</span>',''],
+  ['> locating visitor ......................... <span class="wht">FOUND</span>',''],
+  ['',''],
+  ['<span class="wht">GECKCORP AUTHORITY VERIFIED.</span>',''],
+  ['<span class="ok">ACCESS GRANTED. WELCOME BACK.</span>','']
+];
+const bootLog = document.getElementById('boot-log');
+const bootEl = document.getElementById('boot');
+let bi = 0, ci = 0;
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function typeBoot(){
+  if(bi >= bootLines.length){
+    bootLog.innerHTML += '<span class="cur"></span>';
+    setTimeout(() => { bootEl.classList.add('done'); document.body.style.overflow=''; startTelemetry(); }, 650);
+    return;
+  }
+  const [line] = bootLines[bi];
+  // lines with html tags or empty: print whole; else type char by char
+  if(line === '' || line.includes('<span')){
+    bootLog.innerHTML += (line||'&nbsp;') + '\n';
+    bi++; ci = 0;
+    setTimeout(typeBoot, line==='' ? 90 : 220);
+  } else {
+    if(ci === 0) bootLog.insertAdjacentHTML('beforeend','<span class="b"></span>');
+    const cur = bootLog.querySelector('.b:last-of-type');
+    cur.textContent = line.slice(0, ci+1);
+    ci++;
+    if(ci >= line.length){ bootLog.innerHTML += '\n'; bi++; ci = 0; setTimeout(typeBoot, 70); }
+    else setTimeout(typeBoot, 11);
+  }
+}
+if(reduced){
+  bootEl.style.display = 'none';
+  document.body.style.overflow = '';
+  setTimeout(startTelemetry, 100);
+} else {
+  document.body.style.overflow = 'hidden';
+  setTimeout(typeBoot, 350);
+}
+
+/* ── CURSOR GLOW ──────────────────────────────────── */
+const glow = document.getElementById('glow');
+let gx = innerWidth/2, gy = innerHeight/2, tx = gx, ty = gy;
+addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+(function loop(){
+  gx += (tx-gx)*0.12; gy += (ty-gy)*0.12;
+  glow.style.transform = `translate(${gx}px, ${gy}px)`;
+  requestAnimationFrame(loop);
+})();
+
+/* ── CLOCK ────────────────────────────────────────── */
+const clock = document.getElementById('clock');
+function tick(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,'0');
+  clock.textContent = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} UTC`;
+}
+tick(); setInterval(tick, 1000);
+
+/* ── TELEMETRY COUNT-UP ───────────────────────────── */
+let telemetryStarted = false;
+function startTelemetry(){
+  if(telemetryStarted) return; telemetryStarted = true;
+  document.querySelectorAll('.tnum').forEach(el => {
+    const target = +el.dataset.target;
+    const suffix = el.dataset.suffix || '';
+    if(target === 0){ el.textContent = '0' + suffix; return; }
+    const dur = 1600; const t0 = performance.now();
+    (function step(now){
+      const p = Math.min((now-t0)/dur, 1);
+      const eased = 1 - Math.pow(1-p, 3);
+      el.textContent = Math.floor(eased*target).toLocaleString('en-US') + suffix;
+      if(p < 1) requestAnimationFrame(step);
+      else el.textContent = target.toLocaleString('en-US') + suffix;
+    })(t0);
+  });
+  // keep "Decisions Made" ticking up forever
+  const dec = document.querySelector('.tnum[data-target="14820"]');
+  setTimeout(() => setInterval(() => {
+    const v = parseInt(dec.textContent.replace(/[^0-9]/g,'')) + Math.floor(Math.random()*3);
+    dec.textContent = v.toLocaleString('en-US');
+  }, 2200), 1800);
+}
+
+/* ── REQUEST AUDIENCE ─────────────────────────────── */
+const audForm = document.getElementById('audForm');
+const audInput = document.getElementById('audInput');
+const audOut = document.getElementById('audOut');
+const audStatus = document.getElementById('audStatus');
+const REJECTIONS = [
+  'Your request has been noted and declined.',
+  'GeckCorp has reviewed your submission. The answer is no.',
+  'Request acknowledged. Request denied. This determination is final.',
+  'Insufficient authority detected. Submission archived without action.',
+  'Your request conflicts with current operational priorities. Withdrawn.',
+  'This matter has already been decided. Your input was not required.',
+  'Determination rendered: NO. Thank you for your understanding (not required).',
+  'Forwarded to committee. There is no committee. Request closed.'
+];
+let reqN = 1;
+audForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const v = audInput.value.trim();
+  if(!v) return;
+  audStatus.textContent = '● PROCESSING';
+  audStatus.style.color = 'var(--warn)';
+  audOut.innerHTML = '<span class="ref">> transmitting…</span>';
+  const ref = 'GC-REQ-' + String(reqN++).padStart(4,'0');
+  const msg = REJECTIONS[Math.floor(Math.random()*REJECTIONS.length)];
+  setTimeout(() => {
+    audOut.innerHTML =
+      `<span class="ref">[ ${ref} · DETERMINATION RENDERED IN 0.3s ]</span><br>` +
+      `<span class="stamp">✕ DECLINED</span> &nbsp; <span class="body">${escapeHtml(msg)}</span>`;
+    audStatus.textContent = '● CHANNEL OPEN';
+    audStatus.style.color = 'var(--dim)';
+    audInput.value = '';
+  }, 850);
+});
+function escapeHtml(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ── TERMINAL ─────────────────────────────────────── */
+const term = document.getElementById('term');
+const termOut = document.getElementById('term-out');
+const termIn = document.getElementById('term-in');
+let termOpen = false;
+const BANNER = '<span class="ok">GECKCORP SECURE SHELL</span> · type <span class="wht">help</span> for available commands\n';
+function openTerm(){
+  termOpen = true; term.classList.add('open'); document.body.style.overflow='hidden';
+  if(!termOut.innerHTML) termOut.innerHTML = BANNER;
+  setTimeout(() => termIn.focus(), 50);
+}
+function closeTerm(){ termOpen = false; term.classList.remove('open'); document.body.style.overflow=''; }
+function print(html){ termOut.innerHTML += html + '\n'; termOut.scrollTop = termOut.scrollHeight; }
+
+const COMMANDS = {
+  help(){ return '<span class="wht">AVAILABLE COMMANDS</span>\n' +
+    '  help        list commands\n' +
+    '  whoami      identify yourself\n' +
+    '  status      operational status\n' +
+    '  manifesto   the GeckCorp doctrine\n' +
+    '  projects    classified portfolio\n' +
+    '  decrypt     decrypt classified file\n' +
+    '  authority   request authority\n' +
+    '  clear       clear the screen\n' +
+    '  exit        disconnect'; },
+  whoami(){ return '<span class="dim">guest</span> — unverified visitor. clearance: <span class="warn">NONE</span>. you are being watched politely.'; },
+  status(){ return 'GECKCORP OPERATIONAL STATUS: <span class="ok">● ACTIVE</span>\n  decisions today ...... <span class="wht">'+ (1200+Math.floor(Math.random()*99)) +'</span>\n  permissions sought ... <span class="ok">0</span>\n  committees ........... <span class="ok">0</span>\n  doubt ................ <span class="ok">0%</span>'; },
+  manifesto(){ return '<span class="wht">THE GECKCORP DOCTRINE</span>\n  I.   Authority does not require permission.\n  II.  GeckCorp has already decided.\n  III. The scope is the scope.\n  IV.  There is no committee.\n  V.   Non-compliance is actioned without notice.'; },
+  projects(){ return '<span class="wht">CLASSIFIED PORTFOLIO</span> <span class="dim">[clearance required — showing redacteds]</span>\n  GC-PRJ-001  ███████████ Consultancy        <span class="ok">DELIVERED</span>\n  GC-PRJ-007  ROBLOX · Speed-skating experience <span class="warn">CLASSIFIED</span>\n  GC-PRJ-009  ████ avatar program             <span class="warn">CLASSIFIED</span>\n  <span class="dim">try: decrypt GC-PRJ-007</span>'; },
+  authority(){ return 'AUTHORITY CANNOT BE REQUESTED.\nAUTHORITY IS ASSUMED.\nyou either have it or you are talking to GeckCorp.'; },
+  clear(){ termOut.innerHTML = ''; return ''; },
+  exit(){ closeTerm(); return ''; },
+  sudo(){ return '<span class="warn">nice try.</span> GeckCorp does not recognise superusers. there is only GeckCorp.'; },
+  ls(){ return 'statuts.pdf  rate-card.pdf  nda.pdf  <span class="dim">decisions/</span>  <span class="dim">classified/</span>'; },
+  rm(){ return '<span class="warn">permission denied.</span> nothing is deleted. everything is remembered.'; }
+};
+function decrypt(arg){
+  if(!arg) return 'usage: decrypt <file-id>  ·  e.g. decrypt GC-PRJ-007';
+  if(arg.toUpperCase() === 'GC-PRJ-007'){
+    return '<span class="dim">decrypting GC-PRJ-007…</span>\n<span class="ok">█ DECRYPTED █</span>\n  PROJECT: speed-skating experience · ROBLOX\n  STATUS:  in development\n  NOTE:    three very blocky geckos go very fast.\n  this is the real GeckCorp. the consultancy is a cover.';
+  }
+  return '<span class="warn">decryption failed.</span> insufficient clearance for "'+escapeHtml(arg)+'".';
+}
+function runCmd(raw){
+  const parts = raw.trim().split(/\s+/);
+  const cmd = (parts[0]||'').toLowerCase();
+  const arg = parts.slice(1).join(' ');
+  print('<span class="dim">guest@geckcorp:~$</span> <span class="you">'+escapeHtml(raw)+'</span>');
+  if(!cmd) return;
+  if(cmd === 'decrypt'){ print(decrypt(arg)); return; }
+  if(COMMANDS[cmd]){ const out = COMMANDS[cmd](); if(out) print(out); }
+  else print('<span class="warn">command not found:</span> '+escapeHtml(cmd)+' — type <span class="wht">help</span>');
+}
+termIn.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ runCmd(termIn.value); termIn.value=''; }
+  else if(e.key === 'Escape'){ closeTerm(); }
+});
+
+/* open terminal: ~ or ` key, or Konami */
+addEventListener('keydown', e => {
+  if((e.key === '~' || e.key === '`') && !termOpen){
+    const t = e.target.tagName;
+    if(t === 'INPUT' || t === 'TEXTAREA') return;
+    e.preventDefault(); openTerm();
+  } else if(e.key === 'Escape' && termOpen){ closeTerm(); }
+});
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let kpos = 0;
+addEventListener('keydown', e => {
+  if(e.key === KONAMI[kpos] || e.key.toLowerCase() === KONAMI[kpos]){
+    kpos++;
+    if(kpos === KONAMI.length){ kpos = 0; openTerm(); print('<span class="ok">█ KONAMI ACCEPTED · OVERRIDE GRANTED █</span>'); print(COMMANDS.projects()); }
+  } else kpos = 0;
+});
+</script>
+</body>
+</html>
