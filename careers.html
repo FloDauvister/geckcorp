@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GECKCORP / Careers</title>
+<meta name="description" content="GeckCorp is always hiring. Whether you applied is a separate matter.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="/">
+    <svg class="nav-logo" data-gecko viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"></svg>
+    <span class="nav-name">GECKCORP<sup>&reg;</sup></span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="/#divisions">Divisions</a>
+    <a class="nav-link" href="/#leadership">Leadership</a>
+    <a class="nav-link" href="/#press">Press</a>
+    <a class="nav-link" href="/careers.html" style="background:var(--acid);border-bottom-color:var(--ink)">Careers</a>
+    <button class="btn" id="shareholderBtn" type="button">Shareholder Login</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-meta">
+      <span>HUMAN RESOURCES / DIVISION GC-HR</span>
+      <span>OPENINGS: SEVERAL</span>
+      <span>OUTCOMES: PREDETERMINED</span>
+    </div>
+    <h1 class="hero-title small">
+      JOIN<br>
+      <span class="outline">THE</span><br>
+      CORPORATION.
+    </h1>
+    <div class="hero-statement">
+      <p class="hero-line">
+        GeckCorp is always hiring. <em>Whether you applied is a separate matter.</em>
+        All positions are on-site, near the warm window.
+      </p>
+    </div>
+  </div>
+</header>
+
+<!-- TAPE -->
+<div class="tape" aria-hidden="true">
+  <div class="tape-inner" id="tape3"></div>
+</div>
+
+<!-- BENEFITS -->
+<section class="section paper" id="benefits">
+  <div class="section-inner">
+    <div class="sec-head"><span class="sec-index">SEC. 01</span><h2 class="sec-title">Benefits</h2></div>
+    <p class="sec-sub">Compensation and culture, per Employee Handbook GC-HB-004. The handbook is binding. The handbook is also quite heavy.</p>
+    <div class="perk-grid">
+      <div class="perk">
+        <h3>Competitive Salary</h3>
+        <p>Salaries compete with each other in a quarterly tournament. Yours is doing well. It has been asked to say hello.</p>
+      </div>
+      <div class="perk">
+        <h3>Unlimited PTO</h3>
+        <p>Paid time off is unlimited and unavailable. The two policies operate independently and in full compliance.</p>
+      </div>
+      <div class="perk">
+        <h3>Heated Break Room</h3>
+        <p>The break room features a large flat rock and a heat lamp. Usage is monitored, encouraged and, frankly, universal.</p>
+      </div>
+      <div class="perk">
+        <h3>Career Growth</h3>
+        <p>Employees grow approximately two centimetres per year. Growth is tracked, charted and celebrated at the annual Measuring.</p>
+      </div>
+      <div class="perk">
+        <h3>Flat Hierarchy</h3>
+        <p>The hierarchy is flat. It is also vertical. Refer to Fig. 1 of the Annual Report, which has itself been promoted.</p>
+      </div>
+      <div class="perk">
+        <h3>Catering</h3>
+        <p>Lunch is provided daily. The protein is seasonal and abundant near the ceiling lights. Vegetarian options exist and are respected, quietly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OPEN POSITIONS -->
+<section class="section acid" id="positions">
+  <div class="section-inner">
+    <div class="sec-head"><span class="sec-index">SEC. 02</span><h2 class="sec-title">Open Positions</h2></div>
+    <p class="sec-sub">Applications are welcome and processed with remarkable speed.</p>
+    <div class="job-list">
+
+      <div class="job-row">
+        <div class="job-info">
+          <div class="job-title">Associate Decision Executor</div>
+          <div class="job-meta">Full-time / Brussels / GC-JOB-011</div>
+          <p class="job-desc">Executes decisions. The decisions arrive pre-made, shrink-wrapped and correct. Attention to detail is required but will not be consulted.</p>
+        </div>
+        <button class="btn" data-apply="Associate Decision Executor" type="button">Apply</button>
+      </div>
+
+      <div class="job-row">
+        <div class="job-info">
+          <div class="job-title">Vice President of Basking</div>
+          <div class="job-meta">Part-time, mornings / near the warm window / GC-JOB-014</div>
+          <p class="job-desc">Must remain motionless for extended periods while radiating executive presence. Prior experience with warmth strongly preferred. A rock is provided.</p>
+        </div>
+        <button class="btn" data-apply="Vice President of Basking" type="button">Apply</button>
+      </div>
+
+      <div class="job-row">
+        <div class="job-info">
+          <div class="job-title">Head of Rumour Management</div>
+          <div class="job-meta">Full-time / hybrid, deniably / GC-JOB-017</div>
+          <p class="job-desc">Denies rumours. Sources fresh rumours to deny, maintaining a healthy denial pipeline. Self-starter, ideally self-stopper.</p>
+        </div>
+        <button class="btn" data-apply="Head of Rumour Management" type="button">Apply</button>
+      </div>
+
+      <div class="job-row">
+        <div class="job-info">
+          <div class="job-title">Compliance Intern</div>
+          <div class="job-meta">Unpaid, grateful / GC-JOB-019</div>
+          <p class="job-desc">Compensation is provided in experience, and in writing about the experience. The writing is reviewed by Compliance, which is you. Welcome aboard.</p>
+        </div>
+        <button class="btn" data-apply="Compliance Intern" type="button">Apply</button>
+      </div>
+
+      <div class="job-row">
+        <div class="job-info">
+          <div class="job-title">Chief Executive Officer</div>
+          <div class="job-meta">Filled / permanently / GC-JOB-001</div>
+          <p class="job-desc">This position was filled internally, by Gerald, before the company existed. It is listed here for transparency, a value GeckCorp holds and releases as needed.</p>
+        </div>
+        <span class="job-closed">Filled by Gerald</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <svg class="nav-logo" data-gecko data-gecko-fill="#d6ff00" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"></svg>
+        <span class="nav-name">GECKCORP<sup>&reg;</sup></span>
+      </div>
+      <div class="footer-links">
+        <a href="/">Headquarters</a>
+        <a href="/#press">Press</a>
+        <a href="/#doctrine">Doctrine</a>
+        <a href="/complaints">File a Complaint</a>
+      </div>
+    </div>
+    <div class="footer-legal">
+      &copy; MMXXVI GECKCORP SRL. ALL RIGHTS RESERVED. ADDITIONAL RIGHTS UNDER ACQUISITION.<br>
+      EQUAL OPPORTUNITY: ALL APPLICANTS ARE DECLINED EQUALLY.<br>
+      PRESS <b>~</b> TO ACCESS THE MAINFRAME. THIS IS A TEST OF INITIATIVE.
+    </div>
+  </div>
+</footer>
+
+<!-- APPLY MODAL -->
+<div class="modal-veil" id="applyModal">
+  <div class="modal">
+    <h3>Application Pre-Declined.</h3>
+    <p>Thank you for your interest in the role of <b id="applyRole">the role</b>. To conserve resources, your application was declined before you submitted it. This decision reflects neither your qualifications, which were not reviewed, nor your character, which was.</p>
+    <p>You are encouraged to apply again. The outcome is already filed.</p>
+    <p class="ref-line" id="applyRef">REF GC-HR-DECLINE-0000 / DETERMINATION FINAL</p>
+    <button class="btn" data-close type="button">Understood</button>
+  </div>
+</div>
+
+<!-- SHAREHOLDER MODAL -->
+<div class="modal-veil" id="shareholderModal">
+  <div class="modal">
+    <h3>Access Denied.</h3>
+    <p>You are not a shareholder. GeckCorp is the sole shareholder of GeckCorp. The arrangement is working well and will not be expanded.</p>
+    <p class="ref-line">REF GC-SEC-0001 / DETERMINATION FINAL</p>
+    <button class="btn" data-close type="button">Understood</button>
+  </div>
+</div>
+
+<!-- TERMINAL -->
+<div id="term">
+  <div id="term-head">
+    <span>GECKCORP MAINFRAME / GC-TTY-001 / UNAUTHORISED AND TOLERATED</span>
+    <span>[ ESC ] TO DISCONNECT</span>
+  </div>
+  <div id="term-out"></div>
+  <div id="term-line">
+    <span class="ps">guest@geckcorp:~$</span>
+    <input id="term-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal input">
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
