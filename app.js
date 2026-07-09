@@ -1,5 +1,5 @@
 /* ============================================================
-   GECKCORP / CLIENT-SIDE OPERATIONS GC-JS-002
+   GECKCORP / CLIENT-SIDE OPERATIONS GC-JS-003
    The console is monitored. Close the console.
    ============================================================ */
 
@@ -30,34 +30,6 @@ function escapeHtml(s) {
   return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
-/* ── TICKER ─────────────────────────────────────────── */
-const tickerEl = document.getElementById('ticker');
-if (tickerEl) {
-  const items = [
-    'GECK <span class="up">&#9650; 4,882.11</span>',
-    'DECISIONS RENDERED TODAY: <span class="up">1,204</span>',
-    'PERMISSION REQUESTS FILED: 0',
-    'MANDATORY MORALE: <span class="up">100%</span>',
-    'AMBIENT HUMIDITY: OPTIMAL',
-    'COMMITTEES: <span class="dn">0 (BY DESIGN)</span>',
-    'RUMOURS DENIED: ALL',
-    'THE CEILING: AVAILABLE (BOOK VIA RECEPTION)'
-  ];
-  const half = items.join(' &nbsp;///&nbsp; ') + ' &nbsp;///&nbsp; ';
-  tickerEl.innerHTML = half + half;
-}
-
-/* ── TAPES ──────────────────────────────────────────── */
-function fillTape(id, text) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const half = (text + ' /// ').repeat(3);
-  el.innerHTML = half + half;
-}
-fillTape('tape1', 'AUTHORITY DOES NOT REQUIRE PERMISSION <b>///</b> GECKCORP HAS ALREADY DECIDED <b>///</b> THE SCOPE IS THE SCOPE <b>///</b> THERE IS NO COMMITTEE');
-fillTape('tape2', 'THANK YOU FOR VISITING GECKCORP <b>///</b> YOUR VISIT HAS BEEN LOGGED FAVOURABLY');
-fillTape('tape3', 'GECKCORP IS ALWAYS HIRING <b>///</b> WHETHER YOU APPLIED IS A SEPARATE MATTER');
-
 /* ── LIVE DECISION COUNTER ──────────────────────────── */
 const decEl = document.getElementById('decCount');
 if (decEl) {
@@ -83,8 +55,9 @@ if (cookiebar && !localStorage.getItem('gc-cookies-acknowledged')) {
   setTimeout(() => cookiebar.classList.add('show'), 1800);
   document.getElementById('cookieBtn').addEventListener('click', () => {
     localStorage.setItem('gc-cookies-acknowledged', 'yes');
-    cookiebar.querySelector('p').textContent = 'Acknowledgement received. It changes nothing. Thank you.';
-    setTimeout(() => cookiebar.classList.remove('show'), 1600);
+    document.getElementById('cookieMsg').textContent =
+      'Dismissing this banner stores exactly one fact: that you dismissed this banner.';
+    setTimeout(() => cookiebar.classList.remove('show'), 2200);
   });
 }
 
@@ -142,14 +115,12 @@ if (audForm) {
   });
 }
 
-/* ── CAREERS: PRE-DECLINE ENGINE ────────────────────── */
+/* ── PERSONNEL: PRE-DECLINE ENGINE ──────────────────── */
 const applyModal = document.getElementById('applyModal');
 if (applyModal) {
   let appN = Math.floor(Math.random() * 900) + 100;
   document.querySelectorAll('[data-apply]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const role = btn.dataset.apply;
-      applyModal.querySelector('#applyRole').textContent = role;
       applyModal.querySelector('#applyRef').textContent =
         'REF GC-HR-DECLINE-' + String(appN++).padStart(4, '0') + ' / DETERMINATION FINAL';
       openModal(applyModal);
@@ -190,20 +161,22 @@ if (term) {
       '  doctrine    the five articles\n' +
       '  projects    classified portfolio\n' +
       '  decrypt     decrypt classified file\n' +
+      '  gerald      locate the executive\n' +
       '  humidity    ambient conditions\n' +
       '  authority   request authority\n' +
       '  clear       clear the screen\n' +
       '  exit        disconnect'; },
     whoami() { return '<span class="dim">guest</span> / unverified visitor. clearance: <span class="warn">NONE</span>. you are being watched, politely.'; },
-    status() { return 'GECKCORP OPERATIONAL STATUS: <span class="ok">ACTIVE</span>\n  decisions today ...... <span class="wht">' + (1200 + Math.floor(Math.random() * 99)) + '</span>\n  permissions sought ... <span class="ok">0</span>\n  committees ........... <span class="ok">0</span>\n  doubt ................ <span class="ok">0%</span>\n  ceiling occupancy .... <span class="warn">1 (UNBOOKED)</span>'; },
+    status() { return 'GECKCORP OPERATIONAL STATUS: <span class="ok">ACTIVE</span>\n  decisions today ...... <span class="wht">' + (1200 + Math.floor(Math.random() * 99)) + '</span>\n  permissions sought ... <span class="ok">0</span>\n  committees ........... <span class="ok">0</span>\n  headcount ............ <span class="ok">1 (AT CAPACITY)</span>\n  ceiling occupancy .... <span class="warn">1 (UNBOOKED)</span>'; },
     doctrine() { return '<span class="wht">THE GECKCORP DOCTRINE</span>\n  I.   Authority does not require permission.\n  II.  GeckCorp has already decided.\n  III. The scope is the scope.\n  IV.  There is no committee.\n  V.   Non-compliance is actioned without notice.'; },
     projects() { return '<span class="wht">CLASSIFIED PORTFOLIO</span> <span class="dim">[clearance required, showing redactions]</span>\n  GC-PRJ-001  &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608; consultancy          <span class="ok">DELIVERED</span>\n  GC-PRJ-007  ROBLOX / speed-skating experience  <span class="warn">CLASSIFIED</span>\n  GC-PRJ-009  &#9608;&#9608;&#9608;&#9608; avatar program            <span class="warn">CLASSIFIED</span>\n  <span class="dim">try: decrypt GC-PRJ-007</span>'; },
+    gerald() { return 'locating the executive...\n<span class="ok">FOUND:</span> near the warm window.\ngerald is in a meeting with gerald. you may leave a message with gerald.'; },
     humidity() { return 'ambient humidity: <span class="ok">OPTIMAL</span>\nthis reading has been optimal since the memo. the memo worked.\ndo not touch the thermostat. the thermostat reports directly to the CEO.'; },
     authority() { return 'AUTHORITY CANNOT BE REQUESTED.\nAUTHORITY IS ASSUMED.\nyou either have it, or you are talking to GeckCorp.'; },
     clear() { termOut.innerHTML = ''; return ''; },
     exit() { closeTerm(); return ''; },
-    sudo() { return '<span class="warn">nice try.</span> GeckCorp does not recognise superusers. there is only GeckCorp.'; },
-    ls() { return 'statuts.pdf  rate-card.pdf  nda.pdf  <span class="dim">decisions/</span>  <span class="dim">classified/</span>  <span class="dim">ceiling-bookings/</span>'; },
+    sudo() { return '<span class="warn">nice try.</span> GeckCorp does not recognise superusers. there is only gerald.'; },
+    ls() { return 'statuts.pdf  rate-card.pdf  nda.pdf  <span class="dim">decisions/</span>  <span class="dim">classified/</span>  <span class="dim">gerald/</span>'; },
     rm() { return '<span class="warn">permission denied.</span> nothing is deleted. everything is remembered.'; },
     gecko() { return '<span class="warn">unrecognised term.</span> there are no geckos at GeckCorp. the name is a coincidence. this response was pre-written.'; }
   };
