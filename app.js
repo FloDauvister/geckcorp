@@ -1,5 +1,5 @@
 /* ============================================================
-   GECKCORP / CLIENT-SIDE OPERATIONS GC-JS-003
+   GECKORP / CLIENT-SIDE OPERATIONS GC-JS-004
    The console is monitored. Close the console.
    ============================================================ */
 
@@ -30,111 +30,13 @@ function escapeHtml(s) {
   return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
-/* ── LIVE DECISION COUNTER ──────────────────────────── */
-const decEl = document.getElementById('decCount');
-if (decEl) {
-  let dec = 14820;
-  setInterval(() => {
-    dec += Math.floor(Math.random() * 3);
-    decEl.textContent = dec.toLocaleString('en-US');
-  }, 2400);
-}
-
-/* ── PRESS EXPAND ───────────────────────────────────── */
-document.querySelectorAll('.press-head').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const row = btn.closest('.press-row');
-    const open = row.classList.toggle('open');
-    btn.querySelector('.press-toggle').textContent = open ? '−' : '+';
-  });
-});
-
-/* ── COOKIE BANNER ──────────────────────────────────── */
-const cookiebar = document.getElementById('cookiebar');
-if (cookiebar && !localStorage.getItem('gc-cookies-acknowledged')) {
-  setTimeout(() => cookiebar.classList.add('show'), 1800);
-  document.getElementById('cookieBtn').addEventListener('click', () => {
-    localStorage.setItem('gc-cookies-acknowledged', 'yes');
-    document.getElementById('cookieMsg').textContent =
-      'Dismissing this banner stores exactly one fact: that you dismissed this banner.';
-    setTimeout(() => cookiebar.classList.remove('show'), 2200);
-  });
-}
-
-/* ── MODALS ─────────────────────────────────────────── */
-function openModal(el) { el.classList.add('show'); }
-function closeModal(el) { el.classList.remove('show'); }
-document.querySelectorAll('.modal-veil').forEach(veil => {
-  veil.addEventListener('click', e => { if (e.target === veil) closeModal(veil); });
-  veil.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(veil)));
-});
-const shBtn = document.getElementById('shareholderBtn');
-const shModal = document.getElementById('shareholderModal');
-if (shBtn && shModal) shBtn.addEventListener('click', () => openModal(shModal));
-
-/* ── REQUEST AUDIENCE ───────────────────────────────── */
-const audForm = document.getElementById('audForm');
-if (audForm) {
-  const audInput = document.getElementById('audInput');
-  const audOut = document.getElementById('audOut');
-  const audStatus = document.getElementById('audStatus');
-  const REJECTIONS = [
-    'Your request has been noted and declined.',
-    'GeckCorp has reviewed your submission. The answer is no.',
-    'Request acknowledged. Request denied. The two events were simultaneous.',
-    'Insufficient authority detected. Submission archived without action.',
-    'Your request conflicts with current operational priorities. It has been withdrawn on your behalf.',
-    'This matter was decided some time ago. Your input has been filed under Input.',
-    'Determination rendered: no. Your understanding is appreciated and not required.',
-    'Forwarded to committee. There is no committee. Request closed.'
-  ];
-  let reqN = 1;
-  audForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const v = audInput.value.trim();
-    if (!v) return;
-    if (reqN > 3) {
-      audOut.innerHTML =
-        '<div class="stamp">Limit Reached</div><br>' +
-        '<span class="msg">You have exhausted your audience allocation for this fiscal era. The next era has not been scheduled.</span>';
-      audInput.value = '';
-      return;
-    }
-    audStatus.textContent = 'PROCESSING';
-    audOut.innerHTML = '<span class="ref">&gt; transmitting to the appropriate desk...</span>';
-    const ref = 'GC-REQ-' + String(reqN++).padStart(4, '0');
-    const msg = REJECTIONS[Math.floor(Math.random() * REJECTIONS.length)];
-    setTimeout(() => {
-      audOut.innerHTML =
-        '<span class="ref">[ ' + ref + ' / DETERMINATION RENDERED IN 0.3s ]</span><br>' +
-        '<div class="stamp">Declined</div><br>' +
-        '<span class="msg">' + escapeHtml(msg) + '</span>';
-      audStatus.textContent = 'CHANNEL OPEN';
-      audInput.value = '';
-    }, 850);
-  });
-}
-
-/* ── PERSONNEL: PRE-DECLINE ENGINE ──────────────────── */
-const applyModal = document.getElementById('applyModal');
-if (applyModal) {
-  let appN = Math.floor(Math.random() * 900) + 100;
-  document.querySelectorAll('[data-apply]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      applyModal.querySelector('#applyRef').textContent =
-        'REF GC-HR-DECLINE-' + String(appN++).padStart(4, '0') + ' / DETERMINATION FINAL';
-      openModal(applyModal);
-    });
-  });
-}
-
 /* ── TERMINAL ───────────────────────────────────────── */
 const term = document.getElementById('term');
 if (term) {
   const termOut = document.getElementById('term-out');
   const termIn = document.getElementById('term-in');
   let termOpen = false;
-  const BANNER = '<span class="ok">GECKCORP MAINFRAME</span> / type <span class="wht">help</span> for available commands\n';
+  const BANNER = '<span class="ok">GECKORP MAINFRAME</span> / type <span class="wht">help</span> for available commands\n';
 
   function openTerm() {
     termOpen = true;
@@ -156,6 +58,7 @@ if (term) {
   const COMMANDS = {
     help() { return '<span class="wht">AVAILABLE COMMANDS</span>\n' +
       '  help        list commands\n' +
+      '  about       the executive file\n' +
       '  whoami      identify yourself\n' +
       '  status      operational status\n' +
       '  doctrine    the five articles\n' +
@@ -167,23 +70,24 @@ if (term) {
       '  clear       clear the screen\n' +
       '  exit        disconnect'; },
     whoami() { return '<span class="dim">guest</span> / unverified visitor. clearance: <span class="warn">NONE</span>. you are being watched, politely.'; },
-    status() { return 'GECKCORP OPERATIONAL STATUS: <span class="ok">ACTIVE</span>\n  decisions today ...... <span class="wht">' + (1200 + Math.floor(Math.random() * 99)) + '</span>\n  permissions sought ... <span class="ok">0</span>\n  committees ........... <span class="ok">0</span>\n  headcount ............ <span class="ok">1 (AT CAPACITY)</span>\n  ceiling occupancy .... <span class="warn">1 (UNBOOKED)</span>'; },
-    doctrine() { return '<span class="wht">THE GECKCORP DOCTRINE</span>\n  I.   Authority does not require permission.\n  II.  GeckCorp has already decided.\n  III. The scope is the scope.\n  IV.  There is no committee.\n  V.   Non-compliance is actioned without notice.'; },
+    status() { return 'GECKORP OPERATIONAL STATUS: <span class="ok">ACTIVE</span>\n  decisions today ...... <span class="wht">' + (1200 + Math.floor(Math.random() * 99)) + '</span>\n  permissions sought ... <span class="ok">0</span>\n  committees ........... <span class="ok">0</span>\n  headcount ............ <span class="ok">1 (AT CAPACITY)</span>\n  ceiling occupancy .... <span class="warn">1 (UNBOOKED)</span>'; },
+    doctrine() { return '<span class="wht">THE GECKORP DOCTRINE</span>\n  I.   Authority does not require permission.\n  II.  Geckorp has already decided.\n  III. The scope is the scope.\n  IV.  There is no committee.\n  V.   Non-compliance is actioned without notice.'; },
     projects() { return '<span class="wht">CLASSIFIED PORTFOLIO</span> <span class="dim">[clearance required, showing redactions]</span>\n  GC-PRJ-001  &#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608; consultancy          <span class="ok">DELIVERED</span>\n  GC-PRJ-007  ROBLOX / speed-skating experience  <span class="warn">CLASSIFIED</span>\n  GC-PRJ-009  &#9608;&#9608;&#9608;&#9608; avatar program            <span class="warn">CLASSIFIED</span>\n  <span class="dim">try: decrypt GC-PRJ-007</span>'; },
+    about() { return '<span class="wht">EXECUTIVE FILE GC-EMP-001</span>\n  name ......... Gerald Eck\n  offices ...... CEO, CFO, Chief Compliance Officer, Head of Facilities,\n                 Custodian of the Warm Window\n  reports to ... The Board. The Board is Gerald.\n  note ......... the front page is the serious one. this is the real one.'; },
     gerald() { return 'locating the executive...\n<span class="ok">FOUND:</span> near the warm window.\ngerald is in a meeting with gerald. you may leave a message with gerald.'; },
     humidity() { return 'ambient humidity: <span class="ok">OPTIMAL</span>\nthis reading has been optimal since the memo. the memo worked.\ndo not touch the thermostat. the thermostat reports directly to the CEO.'; },
-    authority() { return 'AUTHORITY CANNOT BE REQUESTED.\nAUTHORITY IS ASSUMED.\nyou either have it, or you are talking to GeckCorp.'; },
+    authority() { return 'AUTHORITY CANNOT BE REQUESTED.\nAUTHORITY IS ASSUMED.\nyou either have it, or you are talking to Geckorp.'; },
     clear() { termOut.innerHTML = ''; return ''; },
     exit() { closeTerm(); return ''; },
-    sudo() { return '<span class="warn">nice try.</span> GeckCorp does not recognise superusers. there is only gerald.'; },
+    sudo() { return '<span class="warn">nice try.</span> Geckorp does not recognise superusers. there is only gerald.'; },
     ls() { return 'statuts.pdf  rate-card.pdf  nda.pdf  <span class="dim">decisions/</span>  <span class="dim">classified/</span>  <span class="dim">gerald/</span>'; },
     rm() { return '<span class="warn">permission denied.</span> nothing is deleted. everything is remembered.'; },
-    gecko() { return '<span class="warn">unrecognised term.</span> there are no geckos at GeckCorp. the name is a coincidence. this response was pre-written.'; }
+    gecko() { return '<span class="warn">unrecognised term.</span> there are no geckos at Geckorp. the name is a coincidence. this response was pre-written.'; }
   };
   function decrypt(arg) {
     if (!arg) return 'usage: decrypt <file-id>  /  e.g. decrypt GC-PRJ-007';
     if (arg.toUpperCase() === 'GC-PRJ-007') {
-      return '<span class="dim">decrypting GC-PRJ-007...</span>\n<span class="ok">DECRYPTED</span>\n  PROJECT: speed-skating experience / ROBLOX\n  STATUS:  in development\n  NOTE:    three very blocky geckos go very fast.\n  this is the real GeckCorp. the consultancy is a cover.';
+      return '<span class="dim">decrypting GC-PRJ-007...</span>\n<span class="ok">DECRYPTED</span>\n  PROJECT: speed-skating experience / ROBLOX\n  STATUS:  in development\n  NOTE:    three very blocky geckos go very fast.\n  this is the real Geckorp. the consultancy is a cover.';
     }
     return '<span class="warn">decryption failed.</span> insufficient clearance for "' + escapeHtml(arg) + '".';
   }
@@ -191,7 +95,7 @@ if (term) {
     const parts = raw.trim().split(/\s+/);
     const cmd = (parts[0] || '').toLowerCase();
     const arg = parts.slice(1).join(' ');
-    print('<span class="dim">guest@geckcorp:~$</span> <span class="wht">' + escapeHtml(raw) + '</span>');
+    print('<span class="dim">guest@geckorp:~$</span> <span class="wht">' + escapeHtml(raw) + '</span>');
     if (!cmd) return;
     if (cmd === 'decrypt') { print(decrypt(arg)); return; }
     if (COMMANDS[cmd]) { const out = COMMANDS[cmd](); if (out) print(out); }
@@ -225,7 +129,7 @@ if (term) {
 
 /* ── CONSOLE NOTICE ─────────────────────────────────── */
 console.log(
-  '%c GECKCORP ' + '%c the console is monitored. close the console. ',
+  '%c GECKORP ' + '%c the console is monitored. close the console. ',
   'background:#0b0b0b;color:#d6ff00;font-weight:bold;padding:4px 8px;',
   'background:#d6ff00;color:#0b0b0b;padding:4px 8px;'
 );
