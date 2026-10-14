@@ -112,6 +112,7 @@ if (term) {
       e.preventDefault(); openTerm();
     } else if (e.key === 'Escape' && termOpen) { closeTerm(); }
   });
+  document.querySelectorAll('[data-open-term]').forEach(b => b.addEventListener('click', openTerm));
   const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
   let kpos = 0;
   addEventListener('keydown', e => {
@@ -126,6 +127,15 @@ if (term) {
     } else kpos = 0;
   });
 }
+
+/* ── COPY ADDRESS ───────────────────────────────────── */
+document.querySelectorAll('[data-copy]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const note = document.querySelector('.copy-note');
+    try { await navigator.clipboard.writeText(btn.dataset.copy); if (note) note.textContent = 'Copied. Filed. Awaiting your message.'; }
+    catch { if (note) note.textContent = btn.dataset.copy; }
+  });
+});
 
 /* ── CONSOLE NOTICE ─────────────────────────────────── */
 console.log(
