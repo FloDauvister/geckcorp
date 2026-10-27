@@ -1,0 +1,29 @@
+# PERSONAL project. Deploys are done by Cloudflare itself: the Pages project geckcorp on the personal account
+# (fdauvister@gmail.com) is Git-connected to this repo and publishes every push to main. No token here.
+# This workflow only proves it happened: after a push to main, geckcorp.pages.dev must serve the committed files.
+name: Verify live
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Live files are main
+        run: |
+          check() {
+            for f in index.html styles.css app.js 404.html; do
+              path=${f%index.html}; path=${path%.html}
+              [ "$(curl -sL "https://geckcorp.pages.dev/$path" | sha256sum)" = "$(sha256sum < "$f")" ] || { echo "waiting on $f"; return 1; }
+            done
+          }
+          for i in $(seq 1 30); do check && { echo "live = main"; exit 0; }; sleep 15; done
+          echo "::error::geckcorp.pages.dev does not serve main ${GITHUB_SHA::7}"; exit 1
